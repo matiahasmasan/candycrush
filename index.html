@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Candy Crush</title>
+    <link href="style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div>
+      <button
+        style="display: inline-block; margin-right: 10px"
+        onclick="playGame()"
+      >
+        New Game
+      </button>
+      <p style="display: inline-block; margin-right: 10px" id="score">
+        Scor: 0
+      </p>
+      <p style="display: inline-block; margin-right: 10px" id="overall">
+        Overall: 0
+      </p>
+      <p style="display: inline-block; margin-right: 10px" id="record">
+        Record: 0
+      </p>
+      <p style="display: inline-block; margin-right: 10px" id="average">
+        Average: 0
+      </p>
+      <p style="display: inline-block; margin-right: 10px" id="games">
+        Games: 0
+      </p>
+    </div>
+    <div class="grid" id="gameGrid"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
