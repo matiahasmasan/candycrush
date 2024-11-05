@@ -29,20 +29,20 @@
       }
       .color-0 {
         background-color: #ddd;
-      } /* Empty */
+      }
       .color-1 {
         background-color: red;
-      } /* Red */
+      }
       .color-2 {
         background-color: yellow;
         color: #333;
-      } /* Yellow */
+      }
       .color-3 {
         background-color: green;
-      } /* Green */
+      }
       .color-4 {
         background-color: blue;
-      } /* Blue */
+      }
       #startButton {
         padding: 10px 20px;
         font-size: 16px;
@@ -51,21 +51,23 @@
     </style>
   </head>
   <body>
-    <h1>Candy Crush Simulation</h1>
     <button id="startButton">Run Simulation</button>
+    <span
+      ><button onclick="toggleSpeed()" style="margin: 12px">
+        Schimba viteza
+      </button></span
+    >
     <div id="results"></div>
     <div id="board"></div>
 
     <script>
       const ROWS = 11;
       const COLS = 11;
-      const EMPTY = 0;
+
       const RED = 1;
       const YELLOW = 2;
       const GREEN = 3;
       const BLUE = 4;
-      const TARGET_SCORE = 10000;
-      const TOTAL_GAMES = 100;
 
       let board;
       let isProcessing = false;
@@ -76,6 +78,12 @@
       let gameSwaps = [];
       let score = 0;
       let swapCount = 0;
+
+      let speed = 200;
+      function toggleSpeed() {
+        speed = speed === 200 ? 1000 : 200;
+        console.log("Speed is now:", speed); // Display the current speed in the console
+      }
 
       function initializeBoard() {
         let board = [];
@@ -97,7 +105,6 @@
           for (let col = 0; col < board[row].length; col++) {
             const cell = document.createElement("div");
             cell.classList.add("cell", `color-${board[row][col]}`);
-            cell.textContent = board[row][col] === 0 ? "" : board[row][col];
             boardElement.appendChild(cell);
           }
         }
@@ -106,31 +113,196 @@
       function displayResults(score, swapCount) {
         const resultsElement = document.getElementById("results");
         resultsElement.innerHTML = `
-                <p><strong>Current Score:</strong> ${score}</p>
-                <p><strong>Swaps so far:</strong> ${swapCount}</p>
+                <p><strong>Current Score and Swaps:</strong> ${score} and  ${swapCount}</p>
                 <p><strong>Games Played:</strong> ${currentGame}</p>
-                <p><strong>Total Score So Far:</strong> ${totalScore}</p>
-                <p><strong>Total Swaps So Far:</strong> ${totalSwaps}</p>
+                <p><strong>Total Score and Swaps So Far:</strong> ${totalScore} and ${totalSwaps}</p>
                 <p><strong>Average Swaps So Far:</strong> ${
-                  totalSwaps / currentGame
+                  currentGame > 0 ? (totalSwaps / currentGame).toFixed(2) : 0
                 }</p>
-                
             `;
       }
 
-      function checkAndClearFormations() {
+      function checkFormations() {
         let points = 0;
         let markedForClear = Array.from({ length: ROWS }, () =>
           Array(COLS).fill(false)
         );
 
-        // Check horizontal and vertical lines, and mark them
+        for (let row = 0; row < ROWS - 2; row++) {
+          for (let col = 0; col < COLS - 2; col++) {
+            let candy = board[row][col];
+            if (candy === 0) continue;
+
+            // L
+            if (
+              row + 2 < board.length && // border jos
+              col + 2 < board[0].length && // border dreapta
+              board[row][col] === candy &&
+              board[row + 1][col] === candy &&
+              board[row + 2][col] === candy &&
+              board[row + 2][col + 1] === candy &&
+              board[row + 2][col + 2] === candy
+            ) {
+              console.log("0 L");
+              points += 20;
+              markedForClear[row][col] =
+                markedForClear[row + 1][col] =
+                markedForClear[row + 2][col] =
+                markedForClear[row + 2][col + 1] =
+                markedForClear[row + 2][col + 2] =
+                  true;
+            }
+
+            // Horizontally Reversed L
+            if (
+              row + 2 < board.length && // border jos
+              col - 2 >= 0 && // border stanga
+              board[row][col] === candy &&
+              board[row + 1][col] === candy &&
+              board[row + 2][col] === candy &&
+              board[row + 2][col - 1] === candy &&
+              board[row + 2][col - 2] === candy
+            ) {
+              console.log("HR L");
+              points += 20;
+              markedForClear[row][col] =
+                markedForClear[row + 1][col] =
+                markedForClear[row + 2][col] =
+                markedForClear[row + 2][col - 1] =
+                markedForClear[row + 2][col - 2] =
+                  true;
+            }
+
+            // Vertically Flipped L (90 degrees)
+            if (
+              row + 2 < board.length && // border jos
+              col + 2 < board[0].length && // border dreapta
+              board[row][col] === candy &&
+              board[row][col + 1] === candy &&
+              board[row][col + 2] === candy &&
+              board[row + 1][col] === candy &&
+              board[row + 2][col] === candy
+            ) {
+              console.log("90 L");
+              points += 20;
+              markedForClear[row][col] =
+                markedForClear[row][col + 1] =
+                markedForClear[row][col + 2] =
+                markedForClear[row + 1][col] =
+                markedForClear[row + 2][col] =
+                  true;
+            }
+
+            // Vertically Flipped, Horizontally Reversed L (270 degrees)
+            if (
+              row + 2 < board.length && // border jos
+              col - 2 >= 0 && // border stanga
+              board[row][col] === candy &&
+              board[row][col - 1] === candy &&
+              board[row][col - 2] === candy &&
+              board[row + 1][col] === candy &&
+              board[row + 2][col] === candy
+            ) {
+              console.log("270 L");
+              points += 20;
+              markedForClear[row][col] =
+                markedForClear[row][col - 1] =
+                markedForClear[row][col - 2] =
+                markedForClear[row + 1][col] =
+                markedForClear[row + 2][col] =
+                  true;
+            }
+
+            // T
+            if (
+              col + 2 < board[0].length && // border dreapta
+              row + 2 < board.length && // border jos
+              board[row][col] === candy &&
+              board[row][col + 1] === candy &&
+              board[row][col + 2] === candy &&
+              board[row + 1][col + 1] === candy &&
+              board[row + 2][col + 1] === candy
+            ) {
+              console.log("0 T");
+              points += 30;
+              markedForClear[row][col] =
+                markedForClear[row][col + 1] =
+                markedForClear[row][col + 2] =
+                markedForClear[row + 1][col + 1] =
+                markedForClear[row + 2][col + 1] =
+                  true;
+            }
+
+            // 90 T
+            if (
+              col - 1 >= 0 && // border stanga
+              col + 1 < board[0].length && // border dreapta
+              row + 2 < board.length && // border jos
+              board[row][col] === candy &&
+              board[row + 1][col] === candy &&
+              board[row + 1][col - 1] === candy &&
+              board[row + 1][col + 1] === candy &&
+              board[row + 2][col] === candy
+            ) {
+              console.log("90 T");
+              points += 30;
+              markedForClear[row][col] =
+                markedForClear[row + 1][col] =
+                markedForClear[row + 1][col - 1] =
+                markedForClear[row + 1][col + 1] =
+                markedForClear[row + 2][col] =
+                  true;
+            }
+
+            // 180 T
+            if (
+              col - 1 >= 0 && // border stanga
+              col + 1 < board[0].length && // border dreapta
+              row + 2 < board.length && // border jos
+              board[row][col] === candy &&
+              board[row + 1][col] === candy &&
+              board[row + 2][col] === candy &&
+              board[row + 2][col - 1] === candy &&
+              board[row + 2][col + 1] === candy
+            ) {
+              console.log("180 T");
+              points += 30;
+              markedForClear[row][col] =
+                markedForClear[row + 1][col] =
+                markedForClear[row + 2][col] =
+                markedForClear[row + 2][col - 1] =
+                markedForClear[row + 2][col + 1] =
+                  true;
+            }
+
+            // 270 T
+            if (
+              col + 2 < board[0].length && // border dreapta
+              row + 1 < board.length && // border jos
+              board[row][col] === candy &&
+              board[row][col + 1] === candy &&
+              board[row][col + 2] === candy &&
+              board[row + 1][col] === candy &&
+              board[row + 1][col + 2] === candy
+            ) {
+              console.log("270 T");
+              points += 30;
+              markedForClear[row][col] =
+                markedForClear[row][col + 1] =
+                markedForClear[row][col + 2] =
+                markedForClear[row + 1][col] =
+                markedForClear[row + 1][col + 2] =
+                  true;
+            }
+          }
+        }
+
         for (let row = 0; row < ROWS; row++) {
           for (let col = 0; col < COLS; col++) {
             let candy = board[row][col];
-            if (candy === EMPTY) continue;
+            if (candy === 0) continue;
 
-            // Horizontal lines
+            // Horizontal
             if (
               col <= COLS - 3 &&
               board[row][col + 1] === candy &&
@@ -144,7 +316,7 @@
                 markedForClear[row][col + k] = true;
             }
 
-            // Vertical lines
+            // Vertical
             if (
               row <= ROWS - 3 &&
               board[row + 1][col] === candy &&
@@ -160,10 +332,9 @@
           }
         }
 
-        // Clear marked candies
         for (let row = 0; row < ROWS; row++) {
           for (let col = 0; col < COLS; col++) {
-            if (markedForClear[row][col]) board[row][col] = EMPTY;
+            if (markedForClear[row][col]) board[row][col] = 0;
           }
         }
 
@@ -171,14 +342,16 @@
         return points > 0;
       }
 
-      function applyGravityAndGenerateNewCandies() {
+      function Gravity() {
         for (let col = 0; col < COLS; col++) {
           let emptyRow = ROWS - 1;
           for (let row = ROWS - 1; row >= 0; row--) {
-            if (board[row][col] !== EMPTY) {
+            if (board[row][col] !== 0) {
               board[emptyRow][col] = board[row][col];
-              if (emptyRow !== row) board[row][col] = EMPTY;
+
+              if (emptyRow !== row) board[row][col] = 0;
               emptyRow--;
+              displayBoard(board);
             }
           }
           for (let row = emptyRow; row >= 0; row--) {
@@ -187,26 +360,35 @@
         }
       }
 
-      function attemptToCreateFormation() {
+      function createFormation() {
+        let formationFound = false;
         for (let row = 0; row < ROWS; row++) {
-          for (let col = 0; col < COLS - 1; col++) {
-            swap(board, row, col, row, col + 1);
-            if (checkAndClearFormations()) {
-              swapCount++;
-              return true;
+          for (let col = 0; col < COLS; col++) {
+            // horizontal swap
+            if (col < COLS - 1) {
+              swap(board, row, col, row, col + 1);
+              if (checkFormations()) {
+                swapCount++;
+                formationFound = true;
+              }
+              swap(board, row, col, row, col + 1); // Revert
+              //Gravity()
             }
-            swap(board, row, col, row, col + 1);
+
+            // vertical swap
             if (row < ROWS - 1) {
               swap(board, row, col, row + 1, col);
-              if (checkAndClearFormations()) {
+              if (checkFormations()) {
                 swapCount++;
-                return true;
+                formationFound = true;
               }
-              swap(board, row, col, row + 1, col);
+              swap(board, row, col, row + 1, col); // Revert
+              //Gravity()
             }
           }
         }
-        return false;
+
+        return formationFound; // bool
       }
 
       function swap(board, row1, col1, row2, col2) {
@@ -217,67 +399,58 @@
       }
 
       function runStep() {
-        if (isProcessing) return; // Prevent multiple operations at once
+        if (isProcessing) return;
         isProcessing = true;
 
-        if (score >= TARGET_SCORE) {
+        if (score >= 10000) {
           endGame();
           return;
         }
 
-        if (attemptToCreateFormation()) {
+        if (createFormation()) {
           displayBoard(board);
           displayResults(score, swapCount);
+
           setTimeout(() => {
             do {
-              checkAndClearFormations();
-              applyGravityAndGenerateNewCandies();
+              checkFormations();
+              Gravity();
               displayBoard(board);
-            } while (checkAndClearFormations());
+              displayResults(score, swapCount);
+            } while (checkFormations());
 
             isProcessing = false;
-            setTimeout(runStep, 1); // Reduced delay to 1 ms
-          }, 1); // Reduced delay to 1 ms
+            setTimeout(runStep, speed);
+          }, speed);
         } else {
           endGame();
         }
       }
 
-      function endGame() {
-        gameScores.push(score);
-        gameSwaps.push(swapCount);
-        totalScore += score;
-        totalSwaps += swapCount;
-        currentGame++;
-        if (currentGame < TOTAL_GAMES) {
-          setTimeout(startNewGame, 500); // Start new game after 0.5 seconds
-        } else {
-          displayResults(score, swapCount); // Final results
-          isProcessing = false;
-        }
-      }
-
       function startNewGame() {
-        // Reset game state
         board = initializeBoard();
         score = 0;
         swapCount = 0;
         displayBoard(board);
         displayResults(score, swapCount);
-        isProcessing = false; // Allow new game processing to begin
+        isProcessing = false;
         runStep();
+      }
+
+      function endGame() {
+        totalScore += score;
+        totalSwaps += swapCount;
+        currentGame++;
+        gameScores.push(score);
+        gameSwaps.push(swapCount);
+        displayResults(score, swapCount);
+
+        startNewGame();
       }
 
       document
         .getElementById("startButton")
-        .addEventListener("click", function () {
-          currentGame = 0;
-          totalScore = 0;
-          totalSwaps = 0;
-          gameScores = [];
-          gameSwaps = [];
-          startNewGame();
-        });
+        .addEventListener("click", startNewGame);
     </script>
   </body>
 </html>
